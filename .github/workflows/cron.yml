@@ -1,6 +1,6 @@
 on: 
   schedule:
-      - cron: '0 4/* * * *'
+      - cron: '0 */4 * * *'
 jobs:
   get_market_info:
     runs-on: [ubuntu-latest]
