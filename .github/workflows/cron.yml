@@ -10,15 +10,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-verison: '3.8'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pipenv --upgrade-strategy=only-if-needed
-          pipenv install
-      - name: Run
-        run: pipenv run main.py
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          API_SECRET: ${{ secrets.API_SECRET }}
+          python-version: 3.8
+          #- name: Install dependencies
+          #  run: |
+          #    python -m pip install --upgrade pip
+          #    pip install pipenv --upgrade-strategy=only-if-needed
+          #    pipenv install
+          #- name: Run
+          #  run: pipenv run main.py
+          #  env:
+          #    API_KEY: ${{ secrets.API_KEY }}
+          #    API_SECRET: ${{ secrets.API_SECRET }}
 
