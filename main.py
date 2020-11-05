@@ -78,15 +78,14 @@ def run():
     # calculate ideal jpy balance
     ideal_balance_jpy = (balance_jpy + balance_btc_jpy) * fiat_rate
 
-    # TODO 誤差考慮
+    # decide whether or not need rebalancing
+    side = None
     if jpy_rate < fiat_rate and abs(jpy_rate - fiat_rate) >= 0.01:
         side = 'sell'
         quantity = round((ideal_balance_jpy - balance_jpy) / ltp, 8)
-        price = ltp
     elif jpy_rate > fiat_rate and abs(jpy_rate - fiat_rate) >= 0.01:
         side = 'buy'
         quantity  = round((balance_jpy - ideal_balance_jpy) / ltp, 8)
-        price = ltp
 
     if side:
 
@@ -115,7 +114,7 @@ def run():
             print(f"Existing order has been canceled. [id={o['id']}, product_id={o['product_id']}, side={o['side']}, quantity={o['quantity']}, price={o['price']}]")
 
         # create order
-        create_order(trade_pid, side, price, quantity)
+        create_order(trade_pid, side, ltp, quantity)
     else:
         print('No need rebalancing.')
 
