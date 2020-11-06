@@ -47,11 +47,6 @@ def create_order(product_id: int, side: str, price: int, quantity: float):
 
 def run():
 
-    api_key = os.getenv('API_KEY')
-    api_secret = os.getenv('API_SECRET')
-    if not api_key or not api_secret:
-        raise SystemError('You must set API_KEY and API_SECRET as the environment variables.')
-
     # get current price of BTCJPY
     res = requests.get(BASE_URL + f'/products/{trade_pid}')
     if not res.ok:
@@ -102,11 +97,11 @@ def run():
         res = requests.get(BASE_URL + path, headers=create_auth_headers(path, api_key, api_secret))
         if not res.ok:
             raise HTTPError(f'status: {res.status_code}, text: {res.text}')
-        orders = json.loads(res.text)
-        print(f'len={len(orders)} orders existing.')
+        orders = json.loads(res.text)['models']
+        print(f'{len(orders)} orders existing.')
 
         # cancel
-        for o in orders['models']:
+        for o in orders:
             path = f"/orders/{o['id']}/cancel"
             res = requests.put(BASE_URL + path, headers=create_auth_headers(path, api_key, api_secret))
             if not res.ok:
@@ -120,4 +115,8 @@ def run():
 
 
 if __name__ == '__main__':
+    api_key = os.getenv('API_KEY')
+    api_secret = os.getenv('API_SECRET')
+    if not api_key or not api_secret:
+        raise SystemError('You must set API_KEY and API_SECRET as the environment variables.')
     run()
