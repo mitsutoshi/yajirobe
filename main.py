@@ -85,7 +85,6 @@ def run():
     if side:
 
         print(f'The ideal balance of JPY fiat_rate is {fiat_rate}, so you should {side} {quantity:.8f} BTC ({int(quantity * ltp)} JPY).')
-        print(f'After rebalnce balance of JPY is {balance_jpy + int(quantity * ltp)}')
 
         # check order quantity
         if quantity < MIN_ORDER_QUQANTITY:
