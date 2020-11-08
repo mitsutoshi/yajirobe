@@ -40,7 +40,7 @@ def run():
 
         # check order quantity
         if quantity < liquid.MIN_ORDER_QUQANTITY:
-            print(f'Order was not sent as order quantity is less then {MIN_ORDER_QUQANTITY}. [{quantity:.8f}]')
+            print(f'Order was not sent as order quantity is less then {liquid.MIN_ORDER_QUQANTITY}. [{quantity:.8f}]')
             return
 
         # cancel order if order exists
