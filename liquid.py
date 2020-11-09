@@ -4,13 +4,13 @@ import jwt
 import requests
 from requests.exceptions import HTTPError
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 
 BASE_URL = 'https://api.liquid.com'  # type: str
 
 
-MIN_ORDER_QUQANTITY = 0.001  # type: int
+MIN_ORDER_QUANTITY = 0.001  # type: int
 """minimum order quantity"""
 
 

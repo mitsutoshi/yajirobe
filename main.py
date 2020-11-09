@@ -25,30 +25,24 @@ def run():
     btc_rate = blc_btc_jpy / (blc_jpy + blc_btc_jpy)
     print(f'Balance: {int(blc_jpy)} JPY ({jpy_rate:.2%}), {blc_btc} BTC ({int(blc_btc_jpy)} JPY, {btc_rate:.2%}), Toal balance: {int(blc_jpy + blc_btc_jpy)} JPY')
 
-    ideal_blc_jpy = (blc_jpy + blc_btc_jpy) * fiat_rate
+    # cancel order if order exists
+    for o in lqd.get_orders(status='live'):
+        lqd.cancel_order(o['id'])
+        print(f"Existing order has been canceled. [id={o['id']}, product_id={o['product_id']}, side={o['side']}, quantity={o['quantity']}, price={o['price']}]")
 
-    side = None
-    if jpy_rate < fiat_rate and abs(jpy_rate - fiat_rate) >= 0.01:
-        side = 'sell'
-        quantity = round((ideal_blc_jpy - blc_jpy) / ltp, 8)
-    elif jpy_rate > fiat_rate and abs(jpy_rate - fiat_rate) >= 0.01:
-        side = 'buy'
-        quantity  = round((blc_jpy - ideal_blc_jpy) / ltp, 8)
+    side = 'sell' if jpy_rate < fiat_rate else 'buy' if jpy_rate > fiat_rate else None
+    if side and abs(jpy_rate - fiat_rate) >= 0.01:
 
-    if side:
+        # get quantity
+        ideal_blc_jpy = (blc_jpy + blc_btc_jpy) * fiat_rate
+        quantity = round((ideal_blc_jpy - blc_jpy) / ltp, 8) if side == 'sell' else round((blc_jpy - ideal_blc_jpy) / ltp, 8)
         print(f'The ideal balance of JPY fiat_rate is {fiat_rate}, so you should {side} {quantity:.8f} BTC ({int(quantity * ltp)} JPY).')
 
         # check order quantity
-        if quantity < liquid.MIN_ORDER_QUQANTITY:
-            print(f'Order was not sent as order quantity is less then {liquid.MIN_ORDER_QUQANTITY}. [{quantity:.8f}]')
+        if quantity < liquid.MIN_ORDER_QUANTITY:
+            print(f'Order was not sent as order quantity is less then {liquid.MIN_ORDER_QUANTITY}. [{quantity:.8f}]')
             return
 
-        # cancel order if order exists
-        for o in lqd.get_orders(status='live'):
-            lqd.cancel_order(o['id'])
-            print(f"Existing order has been canceled. [id={o['id']}, product_id={o['product_id']}, side={o['side']}, quantity={o['quantity']}, price={o['price']}]")
-
-        # create order
         lqd.create_order(trade_pid, side, ltp, quantity)
     else:
         print('No need rebalancing.')
