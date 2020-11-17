@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 import os
+import json
+import requests
 import liquid
 
 trade_pid = 5  # type: int
@@ -31,6 +33,13 @@ def run():
         print(f"Existing order has been canceled. [id={o['id']}, product_id={o['product_id']}, side={o['side']}, quantity={o['quantity']}, price={o['price']}]")
 
     side = 'sell' if jpy_rate < fiat_rate else 'buy' if jpy_rate > fiat_rate else None
+    msg = f'''
+```
+Total: {int(blc_jpy + blc_btc_jpy):,} JPY
+  - {jpy_rate:.2%}: {int(blc_jpy):,} JPY
+  - {btc_rate:.2%}: {blc_btc} BTC ({int(blc_btc_jpy):,} JPY)
+```
+'''
     if side and abs(jpy_rate - fiat_rate) >= 0.01:
 
         # get quantity
@@ -44,8 +53,13 @@ def run():
             return
 
         lqd.create_order(trade_pid, side, ltp, quantity)
+        msg += f'\nOrder has been created. [product_id={trade_pid}, side={side}, price={ltp}, quantity={quantity}]'
     else:
         print('No need rebalancing.')
+
+    swu = os.getenv('SLACK_WEBHOOK_URL')
+    if swu:
+        requests.post(swu, data = json.dumps({'text': msg}))
 
 
 if __name__ == '__main__':

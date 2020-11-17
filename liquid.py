@@ -22,7 +22,20 @@ class Liquid(object):
         self.api_key = api_key
         self.api_secret = api_secret
 
-    def __create_auth_headers(self, path) -> dict:
+    def __create_auth_headers(self, path: str) -> dict:
+        '''
+        __create_auth_headers creates authentication header to call private API
+
+        Parameters
+        ----------
+        path: str
+            API path included in URI
+
+        Returns
+        -------
+        dict
+            header
+        '''
         payload = {
             'path': path,
             'nonce': int(datetime.now().timestamp() * 1000),
