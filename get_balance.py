@@ -1,22 +1,18 @@
+#! /usr/bin/env python
 import os
-import liquid
 from datetime import datetime
+import time
+
+import liquid
 from influxdb import InfluxDBClient
 
 
 if __name__ == '__main__':
 
-    idb = InfluxDBClient(host=os.environ['DB_HOST'],
-                         port=os.environ['DB_PORT'],
-                         username=os.getenv('DB_USER', ''),
-                         password=os.getenv('DB_PASS', ''),
-                         database=os.environ['DB_NAME'])
     lqd = liquid.Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
-
     balances = lqd.get_accounts_balance()
     products = lqd.get_products()
 
-    now = datetime.now()
     points = []
     for b in balances:
         value = float(b['balance'])
@@ -29,7 +25,7 @@ if __name__ == '__main__':
 
             p = {
                 'measurement': 'balances',
-                'time': now,
+                'time': datetime.utcfromtimestamp(time.time()),
                 'tags': {
                     'currency': b['currency']
                 },
@@ -41,4 +37,9 @@ if __name__ == '__main__':
             points.append(p)
             print(f'data -> {p}')
 
+    idb = InfluxDBClient(host=os.environ['DB_HOST'],
+                         port=os.environ['DB_PORT'],
+                         username=os.getenv('DB_USER', ''),
+                         password=os.getenv('DB_PASS', ''),
+                         database=os.environ['DB_NAME'])
     idb.write_points(points)
