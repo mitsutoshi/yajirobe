@@ -2,7 +2,7 @@ on:
   schedule:
       - cron: '0 */4 * * *'
 jobs:
-  rebalance_asset:
+  rebalance:
     runs-on: [ubuntu-latest]
     steps:
       - name: Checkout
@@ -17,8 +17,28 @@ jobs:
           pip install pipenv --upgrade-strategy=only-if-needed
           pipenv install
       - name: Run
-        run: pipenv run main
+        run: pipenv run rebalance
         env:
           API_KEY: ${{ secrets.API_KEY }}
           API_SECRET: ${{ secrets.API_SECRET }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  get_balance:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv --upgrade-strategy=only-if-needed
+          pipenv install
+      - name: Run
+        run: pipenv run get_balance
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}

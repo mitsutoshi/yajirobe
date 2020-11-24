@@ -14,6 +14,9 @@ MIN_ORDER_QUANTITY = 0.001  # type: int
 """minimum order quantity"""
 
 
+PRODUCT_ID_BTCJPY = 5
+
+
 class Liquid(object):
 
     def __init__(self, api_key: str, api_secret: str):
@@ -46,6 +49,12 @@ class Liquid(object):
                 'X-Quoine-API-Version': '2',
                 'Content-Type': 'application/json'
                 }
+
+    def get_products(self) -> Dict[str, Any]:
+        res = requests.get(BASE_URL + f'/products')
+        if not res.ok:
+            raise HTTPError(f'status: {res.status_code}, text: {res.text}')
+        return json.loads(res.text)
 
     def get_product(self, product_id: int) -> Dict[str, Any]:
         res = requests.get(BASE_URL + f'/products/{product_id}')

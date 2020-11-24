@@ -13,4 +13,5 @@ pyjwt = "*"
 python_version = "3.8"
 
 [scripts]
-main = "python main.py"
+rebalance = "python main.py"
+get_balance = "python get_balance.py"
