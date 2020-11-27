@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3ee35594274ace7e97aefa1b0ce7da2584e5254cfcce1f4e9e0367b4d6198807"
+            "sha256": "43b5e98b2c1a8c1208b4c994e58fb452d46dc99188849f40fff3634c1fd7c1d6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -44,6 +44,10 @@
             ],
             "index": "pypi",
             "version": "==5.3.1"
+        },
+        "liquidpy": {
+            "git": "https://github.com/mitsutoshi/liquidpy",
+            "ref": "799444cdb32edd6227488fcee7c99f1b0e62b09f"
         },
         "msgpack": {
             "hashes": [

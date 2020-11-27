@@ -2,14 +2,14 @@
 import os
 import json
 import requests
-import liquid
+from liquidpy.api import Liquid, MIN_ORDER_QUANTITY
 
 trade_pid = 5  # type: int
 fiat_rate= 0.5  # type: float
 
 
 def run():
-    lqd = liquid.Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))  # type: Liquid
+    lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))  # type: Liquid
 
     # get current price of BTCJPY
     ltp = float(lqd.get_product(trade_pid)['last_traded_price'])
@@ -41,8 +41,8 @@ def run():
         print(f'The ideal balance of JPY fiat_rate is {fiat_rate}, so you should {side} {quantity:.8f} BTC ({int(quantity * ltp)} JPY).')
 
         # check order quantity
-        if quantity < liquid.MIN_ORDER_QUANTITY:
-            t = f'Order was not sent as order quantity {quantity:.8f} is less then {liquid.MIN_ORDER_QUANTITY}.'
+        if quantity < MIN_ORDER_QUANTITY:
+            t = f'Order was not sent as order quantity {quantity:.8f} is less then {MIN_ORDER_QUANTITY}.'
         else:
             lqd.create_order(trade_pid, side, ltp, quantity)
             t = f'Order has been created. [product_id={trade_pid}, side={side}, price={ltp}, quantity={quantity}]'

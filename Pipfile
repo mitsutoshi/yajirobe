@@ -9,6 +9,7 @@ verify_ssl = true
 requests = "*"
 pyjwt = "*"
 influxdb = "*"
+liquidpy = {git = "https://github.com/mitsutoshi/liquidpy"}
 
 [requires]
 python_version = "3.8"
