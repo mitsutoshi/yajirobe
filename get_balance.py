@@ -3,13 +3,13 @@ import os
 from datetime import datetime
 import time
 
-import liquid
+from liquidpy.api import Liquid
 from influxdb import InfluxDBClient
 
 
 if __name__ == '__main__':
 
-    lqd = liquid.Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
+    lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
     balances = lqd.get_accounts_balance()
     products = lqd.get_products()
 
