@@ -47,7 +47,7 @@
         },
         "liquidpy": {
             "git": "https://github.com/mitsutoshi/liquidpy",
-            "ref": "799444cdb32edd6227488fcee7c99f1b0e62b09f"
+            "ref": "bf0f05ec6bc80c3bb84e55eebe3564d16eef6684"
         },
         "msgpack": {
             "hashes": [
