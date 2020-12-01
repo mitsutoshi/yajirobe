@@ -49,7 +49,7 @@ def run():
         if quantity < MIN_ORDER_QUANTITY:
             t = f'Order was not sent as order quantity {quantity:.8f} is less then {MIN_ORDER_QUANTITY}.'
         else:
-            lqd.create_order(trade_pid, side, ltp, quantity)
+            lqd.create_order(product_id=trade_pid, side=side, quantity=quantity, price=ltp)
             t = f'Order has been created. [product_id={trade_pid}, side={side}, price={ltp}, quantity={quantity}]'
     else:
         t = 'No need rebalancing.'
