@@ -1,71 +1,67 @@
 #! /usr/bin/env python
+"""
+yajirobe
+
+yajirobe is a bot rebalancing assets. This bot buy/sell BTC/JPY of assets to rebalance.
+"""
 import os
 import json
 import logging
 import requests
 from liquidpy.api import Liquid, MIN_ORDER_QUANTITY, PRODUCT_ID_BTCJPY, SIDE_BUY, SIDE_SELL
 
-formatter = '%(levelname)s : %(asctime)s : %(message)s'
+formatter = '%(levelname)s %(asctime)s %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
 logger = logging.getLogger()
 
-fiat_rate= 0.5  # type: float
+fiat_rate = 0.5  # type: float
+swu = os.getenv('SLACK_WEBHOOK_URL')  # option
+lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))  # type: Liquid
 
 
-def run():
+def main():
 
-    # get environment vars
-    api_key = os.getenv('API_KEY')  # required
-    api_secret = os.getenv('API_SECRET')  # required
-    swu = os.getenv('SLACK_WEBHOOK_URL')  # option
-
-    lqd = Liquid(api_key, api_secret)  # type: Liquid
-
-    # get current price of BTCJPY
+    # get current BTC price
     ltp = float(lqd.get_products(product_id=PRODUCT_ID_BTCJPY)['last_traded_price'])
-    logger.info(f'Latest price of BTCJPY: {ltp}')
+    logger.info(f'Latest price of BTCJPY: {ltp:.0f}')
 
-    # get balance
+    # get current account balance
     balance = lqd.get_accounts_balance()
-    for a in balance:
-        if a['currency'] == 'JPY':
-            blc_jpy = float(a['balance'])
-        elif a['currency'] == 'BTC':
-            blc_btc = float(a['balance'])
-            blc_btc_jpy = ltp * blc_btc
-    total = int(blc_jpy + blc_btc * ltp)
-    jpy_rate = blc_jpy / total
-    btc_rate = blc_btc_jpy / total
-    logger.info(f'Balance {total} JPY: {int(blc_jpy)} JPY ({jpy_rate:.1%}), {blc_btc:.3f} BTC ({btc_rate:.1%}, {int(blc_btc_jpy)} JPY)')
+    b_jpy = sum([float(b['balance']) for b in balance if b['currency'] == 'JPY'])
+    b_btc = sum([float(b['balance']) for b in balance if b['currency'] == 'BTC'])
+    b_btc_jpy = ltp * b_btc
+    total = int(b_jpy + b_btc_jpy)
+    jpy_rate = b_jpy / total
+    logger.info(f'Balance {total} JPY => {int(b_jpy)} JPY ({jpy_rate:.1%}), {b_btc:.3f} BTC ({1-jpy_rate:.1%}, {int(b_btc_jpy)} JPY)')
 
+    # cancel exist orders
     lqd.cancel_all_orders()
 
-    t = 'No need rebalancing.'
+    # create an order
+    t = 'No need to keep balance.'
     side = SIDE_SELL if jpy_rate < fiat_rate else SIDE_BUY if jpy_rate > fiat_rate else None
     if side and abs(jpy_rate - fiat_rate) >= 0.01:
-
-        # get quantity
         ideal_blc_jpy = total * fiat_rate
-        quantity = round((ideal_blc_jpy - blc_jpy) / ltp, 8) if side == SIDE_SELL else round((blc_jpy - ideal_blc_jpy) / ltp, 8)
-        logger.info(f'The ideal balance of JPY fiat_rate is {fiat_rate}, so you should {side} {quantity:.8f} BTC ({int(quantity * ltp)} JPY).')
-
+        qty = round((ideal_blc_jpy - b_jpy) / ltp, 8) if side == SIDE_SELL else round((b_jpy - ideal_blc_jpy) / ltp, 8)
+        logger.info(f'Ideal rate of JPY is {fiat_rate}, so you should {side} {qty:.8f} BTC ({int(qty * ltp)} JPY).')
         try:
-            lqd.create_order(product_id=PRODUCT_ID_BTCJPY, side=side, quantity=quantity, price=ltp)
-            t = f'Order has been created. [product_id={PRODUCT_ID_BTCJPY}, side={side}, price={ltp}, quantity={quantity}]'
+            lqd.create_order(product_id=PRODUCT_ID_BTCJPY, side=side, quantity=qty, price=ltp)
+            t = f'Order has been created. [product_id={PRODUCT_ID_BTCJPY}, side={side}, price={ltp}, quantity={qty}]'
         except Exception as e:
             t = f'{e}'
-
     logger.info(t)
+
+    # send message
     if swu:
         msg = f'''{t}
 ```
 Balance {total:,} JPY
-- {int(blc_jpy):,} JPY ({jpy_rate:.1%})
-- {blc_btc:.3f} BTC ({btc_rate:.1%}) * worth {int(blc_btc_jpy):,} JPY
+- {int(b_jpy):,} JPY ({jpy_rate:.1%})
+- {b_btc:.3f} BTC ({1-jpy_rate:.1%}) * worth {int(b_btc_jpy):,} JPY
 ```
 '''
         requests.post(swu, data=json.dumps({'text': msg}))
 
 
 if __name__ == '__main__':
-    run()
+    main()

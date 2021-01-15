@@ -1,6 +1,6 @@
 # yajirobe
 
-yajirobe is a bot rebalancing the asset for crypto-curency.
+yajirobe is a bot rebalancing cryptocurrency assets.
 
 ## How to install
 
