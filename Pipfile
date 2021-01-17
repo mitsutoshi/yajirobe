@@ -15,6 +15,6 @@ liquidpy = {git = "https://github.com/mitsutoshi/liquidpy",ref = "master"}
 python_version = "3.8"
 
 [scripts]
-rebalance = "python main.py"
+rebalance = "python rebalance.py"
 get_balance = "python get_balance.py"
 get_deposit = "python get_deposit.py"
