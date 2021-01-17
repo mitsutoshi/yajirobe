@@ -17,3 +17,4 @@ python_version = "3.8"
 [scripts]
 rebalance = "python main.py"
 get_balance = "python get_balance.py"
+get_deposit = "python get_deposit.py"
