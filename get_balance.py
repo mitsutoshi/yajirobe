@@ -12,6 +12,7 @@ if __name__ == '__main__':
     lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
     balances = lqd.get_accounts_balance()
     products = lqd.get_products()
+    now = datetime.utcfromtimestamp(time.time())
 
     points = []
     for b in balances:
@@ -25,7 +26,7 @@ if __name__ == '__main__':
 
             p = {
                 'measurement': 'balances',
-                'time': datetime.utcfromtimestamp(time.time()),
+                'time': now,
                 'tags': {
                     'currency': b['currency']
                 },
