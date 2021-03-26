@@ -42,7 +42,7 @@ def main():
     side = SIDE_SELL if jpy_rate < fiat_rate else SIDE_BUY if jpy_rate > fiat_rate else None
     if side and abs(jpy_rate - fiat_rate) >= 0.01:
         ideal_blc_jpy = total * fiat_rate
-        qty = round((ideal_blc_jpy - b_jpy) / ltp, 8) if side == SIDE_SELL else round((b_jpy - ideal_blc_jpy) / ltp, 8)
+        qty = round(abs(ideal_blc_jpy - b_jpy) / ltp, 8)
         logger.info(f'Ideal rate of JPY is {fiat_rate}, so you should {side} {qty:.8f} BTC ({int(qty * ltp)} JPY).')
         try:
             lqd.create_order(product_id=PRODUCT_ID_BTCJPY, side=side, quantity=qty, price=ltp)
