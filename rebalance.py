@@ -80,7 +80,7 @@ def main():
         logger.info(f'Order will be created. [product=BTCJPY, side={side}, price={ltp}, qty={qty:.8f}]')
         try:
             lqd.create_order(product_id=PRODUCT_ID_BTCJPY, side=side, quantity=qty, price=ltp)
-            t = f'Order has been created.'
+            t = f'Order has been created. [BTCJPY, {side}, {ltp} JPY, {qty:.8f} BTC]'
             logger.info(t)
         except Exception as e:
             t = f'{e}'
