@@ -11,8 +11,8 @@ jobs:
 
   rebalance:
     env:
-      API_KEY: ${{ secrets.API_KEY }}
-      API_SECRET: ${{ secrets.API_SECRET }}
+      LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
+      LIQUID_API_SECRET: ${{ secrets.LIQUID_API_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     runs-on: [ubuntu-latest]
     steps:
@@ -32,8 +32,8 @@ jobs:
 
   getsomeinfo:
     env:
-      API_KEY: ${{ secrets.API_KEY }}
-      API_SECRET: ${{ secrets.API_SECRET }}
+      LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
+      LIQUID_API_SECRET: ${{ secrets.LIQUID_API_SECRET }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_NAME: ${{ secrets.DB_NAME }}

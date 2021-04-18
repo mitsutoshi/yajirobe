@@ -13,7 +13,7 @@ first_record_created_at = 1604411435
 
 def get_executions_me(pos_size, pos_price, timestamp=first_record_created_at, limit=1000):
 
-    lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
+    lqd = Liquid()
     ex = lqd.get_executions_me(product_id=PRODUCT_ID_BTCJPY, timestamp=timestamp, limit=limit)
     ex = sorted(ex, key=lambda x: x['timestamp'])
     since = datetime.fromtimestamp(int(float(ex[0]['timestamp'])))

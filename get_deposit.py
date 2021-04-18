@@ -25,7 +25,7 @@ def exists(history, data) -> bool:
 def main():
 
     # get deposits history
-    lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
+    lqd = Liquid()
     history = lqd.get_fiat_deposits_history(currency='JPY')
 
     # append total deposits

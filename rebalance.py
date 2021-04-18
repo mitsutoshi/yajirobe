@@ -16,7 +16,7 @@ logger = logging.getLogger()
 
 RATE = 0.5  # type: float
 swu = os.getenv('SLACK_WEBHOOK_URL')
-lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))  # type: Liquid
+lqd = Liquid()  # type: Liquid
 
 
 def get_btc_ltp() -> float:

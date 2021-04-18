@@ -8,7 +8,7 @@ from influxdb import InfluxDBClient
 
 
 first_record_created_at = 1604411435
-lqd = Liquid(os.getenv('API_KEY'), os.getenv('API_SECRET'))
+lqd = Liquid()
 idb = InfluxDBClient(host=os.environ['DB_HOST'],
                      port=os.environ['DB_PORT'],
                      username=os.getenv('DB_USER', ''),
