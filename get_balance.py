@@ -53,3 +53,4 @@ if __name__ == '__main__':
             print(f'data -> {p}')
 
     idb.write_points(points)
+
