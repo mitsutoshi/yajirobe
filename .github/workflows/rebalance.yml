@@ -2,6 +2,15 @@ on:
   schedule:
       - cron: '0 */4 * * *'
 jobs:
+
+  env:
+    API_KEY: ${{ secrets.API_KEY }}
+    API_SECRET: ${{ secrets.API_SECRET }}
+    DB_HOST: ${{ secrets.DB_HOST }}
+    DB_PORT: ${{ secrets.DB_PORT }}
+    DB_NAME: ${{ secrets.DB_NAME }}
+    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   rebalance:
     runs-on: [ubuntu-latest]
     steps:
@@ -18,10 +27,7 @@ jobs:
           pipenv install
       - name: Run
         run: pipenv run rebalance
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          API_SECRET: ${{ secrets.API_SECRET }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   getsomeinfo:
     runs-on: [ubuntu-latest]
     steps:
@@ -36,19 +42,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv --upgrade-strategy=only-if-needed
           pipenv install
+      - name: Get Execution
+        run: pipenv run get_execution
       - name: Get Balance
         run: pipenv run get_balance
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          API_SECRET: ${{ secrets.API_SECRET }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
       - name: Get Deposit
         run: pipenv run get_deposit
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          API_SECRET: ${{ secrets.API_SECRET }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
