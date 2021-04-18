@@ -3,15 +3,12 @@ on:
       - cron: '0 */4 * * *'
 jobs:
 
-  env:
-    API_KEY: ${{ secrets.API_KEY }}
-    API_SECRET: ${{ secrets.API_SECRET }}
-    DB_HOST: ${{ secrets.DB_HOST }}
-    DB_PORT: ${{ secrets.DB_PORT }}
-    DB_NAME: ${{ secrets.DB_NAME }}
-    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   rebalance:
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
+      API_SECRET: ${{ secrets.API_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     runs-on: [ubuntu-latest]
     steps:
       - name: Checkout
@@ -29,6 +26,12 @@ jobs:
         run: pipenv run rebalance
 
   getsomeinfo:
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
+      API_SECRET: ${{ secrets.API_SECRET }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
     runs-on: [ubuntu-latest]
     steps:
       - name: Checkout
