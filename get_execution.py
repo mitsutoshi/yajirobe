@@ -9,6 +9,7 @@ from influxdb import InfluxDBClient
 
 
 first_record_created_at = 1604411435
+measurement_name = 'executions2'
 
 
 def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at, limit=1000):
@@ -38,7 +39,7 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
 
         print(f"time={t}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, side={e['my_side']:<4}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, profit={profit if profit else 0:.0f}")
         point = {
-                'measurement': 'executions2',
+                'measurement': measurement_name,
                 'time': t,
                 'tags': {
                     'side': e['my_side'],
@@ -73,7 +74,7 @@ def main():
     else:
 
         # get the latest record time of executions
-        results = idb.query(f'select * from "executions" order by time desc limit 1')
+        results = idb.query(f'select * from "{measurement_name}" order by time desc limit 1')
         last_time = max([r[0]['time'] for r in results])
         pos_size = max([r[0]['pos_size'] for r in results])
         pos_price = max([r[0]['pos_price'] for r in results])
