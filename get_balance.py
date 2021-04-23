@@ -34,8 +34,7 @@ if __name__ == '__main__':
     print(f"captal: {captal}")
 
     # get latest position price
-    executions = idb.query(f'select last(pos_price) from "executions"')
-    last_pos_price = max([e[0]['last'] for e in executions])
+    executions = idb.query(f'select last(pos_price) from "executions2"') last_pos_price = max([e[0]['last'] for e in executions])
     print(f'latest position value: {int(last_pos_price)}')
 
     now = datetime.utcfromtimestamp(time.time())
