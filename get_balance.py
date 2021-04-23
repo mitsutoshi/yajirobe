@@ -16,6 +16,13 @@ idb = InfluxDBClient(host=os.environ['DB_HOST'],
                      database=os.environ['DB_NAME'])
 
 
+def get_last_pos_price():
+    executions = idb.query(f'select last(pos_price) from "executions2"')
+    last_pos_price = max([e[0]['last'] for e in executions])
+    print(f'latest position value: {int(last_pos_price)}')
+    return last_pos_price
+
+
 if __name__ == '__main__':
 
     balances = lqd.get_accounts_balance()
@@ -29,13 +36,8 @@ if __name__ == '__main__':
 
     results = idb.query(f'select sum(amount) from deposits_history where time > \'2020-11-01\'')
     deposit_sum = max([r[0]['sum'] for r in results])
-    captal = deposit_sum - ignore_amount
-    print(f'deposit amount: {deposit_sum} JPY')
-    print(f"captal: {captal}")
-
-    # get latest position price
-    executions = idb.query(f'select last(pos_price) from "executions2"') last_pos_price = max([e[0]['last'] for e in executions])
-    print(f'latest position value: {int(last_pos_price)}')
+    capital = deposit_sum - ignore_amount
+    print(f'deposit amount: {deposit_sum} JPY, capital: {capital}')
 
     now = datetime.utcfromtimestamp(time.time())
 
@@ -58,8 +60,8 @@ if __name__ == '__main__':
                 'fields': {
                     'amount': value,
                     'amount_jpy': amount_jpy,
-                    'unrealized_pnl': amount_jpy - last_pos_price if b['currency'] == 'BTC' else None,
-                    'capital': captal,
+                    'unrealized_pnl': amount_jpy - get_last_pos_price() if b['currency'] == 'BTC' else None,
+                    'capital': capital,
                 }
             }
             points.append(p)
