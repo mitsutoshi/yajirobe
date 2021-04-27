@@ -19,7 +19,7 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
     ex = sorted(ex, key=lambda x: x['timestamp'])
     since = datetime.fromtimestamp(int(float(ex[0]['timestamp'])))
     until = datetime.fromtimestamp(int(float(ex[-1]['timestamp'])))
-    print(f"fetched: len={len(ex)}, sicne={since}, until={until}")
+    print(f"fetched: len={len(ex)}, since={since}, until={until}")
 
     points = []
     pos_size = pos_size
@@ -37,7 +37,7 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
         avg_buy_price = pos_price / pos_size
         profit = (price - avg_buy_price) * qty if e['my_side'] == 'sell' else 0.0
 
-        print(f"time={t}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, side={e['my_side']:<4}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, profit={profit if profit else 0:.0f}")
+        print(f"time={t}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, side={e['my_side']:<4}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_pric={avg_buy_price}, profit={profit if profit else 0:.0f}")
         point = {
                 'measurement': measurement_name,
                 'time': t,
@@ -49,6 +49,7 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
                     'price': price,
                     'pos_size': pos_size,
                     'pos_price': pos_price,
+                    'avg_buy_price': avg_buy_price,
                     'profit': profit,
                     }
                 }
