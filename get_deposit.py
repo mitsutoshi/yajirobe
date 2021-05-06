@@ -12,36 +12,27 @@ tz = pytz.timezone('UTC')
 
 
 def exists(history, data) -> bool:
+
+    h_time = datetime.fromtimestamp(int(history['created_at']), tz=tz)
+    h_amount = float(history['net_amount'])
+
+    f = '%Y-%m-%dT%H:%M:%SZ'
     for d in data:
+
         # create aware date object
-        rec_time = datetime.strptime(
-                d['time'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=tz)
-        if rec_time == datetime.fromtimestamp(int(history['created_at']), tz=tz) \
-            and d['amount'] == float(history['net_amount']):
+        r_time = datetime.strptime(d['time'], f).replace(tzinfo=tz)
+
+        # compare history to record to check if history exists in DB
+        if r_time == h_time and d['amount'] == h_amount:
+            print(f"This history already exists in DB. [deposits_history: time={h_time}, amount={h_amount:,.0f}]")
             return True
     return False
 
 
 def main():
 
-    # get deposits history
     lqd = Liquid()
     history = lqd.get_fiat_deposits_history(currency='JPY')
-
-    # append total deposits
-    points = []
-    p = {
-        'measurement': 'total_deposits',
-        'time': datetime.now(tz=tz),
-        'tags': {
-            'currency': 'JPY'
-            },
-        'fields': {
-            'value': sum([float(h['net_amount']) for h in history['models'] if h['currency']])
-            }
-        }
-    points.append(p)
-    print(f'Append data -> {p}')
 
     # get exist records form database
     idb = InfluxDBClient(host=os.environ['DB_HOST'],
@@ -50,6 +41,7 @@ def main():
                          password=os.getenv('DB_PASS', ''),
                          database=os.environ['DB_NAME'])
     data = list(idb.query('select * from deposits_history').get_points('deposits_history'))
+    points = []
 
     # append deposits_history
     for h in history['models']:

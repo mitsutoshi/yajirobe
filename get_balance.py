@@ -25,15 +25,18 @@ def get_last_pos_price():
 
 if __name__ == '__main__':
 
+    # get info from liquid
     balances = lqd.get_accounts_balance()
     products = lqd.get_products()
     ethjpy = lqd.get_executions_me(product_id=PRODUCT_ID_ETHJPY, timestamp=first_record_created_at, limit=1000)
 
+    # calc ignore amount
     eth_buy_amount = sum([float(r['quantity']) * float(r['price']) for r in ethjpy if r['my_side'] == 'buy'])
     eth_sell_amount = sum([float(r['quantity']) * float(r['price']) for r in ethjpy if r['my_side'] == 'sell'])
     ignore_amount = eth_buy_amount - eth_sell_amount
     print(f'ignore amount: {ignore_amount} JPY')
 
+    # calc capital
     results = idb.query(f'select sum(amount) from deposits_history where time > \'2020-11-01\'')
     deposit_sum = max([r[0]['sum'] for r in results])
     capital = deposit_sum - ignore_amount
