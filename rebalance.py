@@ -72,7 +72,7 @@ def main():
     lqd.cancel_all_orders()
 
     # create an order
-    t = 'No need to change alance.'
+    t = 'No need to change balance.'
     qty = estimate_order_qty(b_jpy, b_btc, ltp)
     logger.info(f'Estimated order quantity: {qty:.8f}')
     if qty > MIN_ORDER_QUANTITY:
