@@ -47,9 +47,9 @@ def send_result_notification(message: str, jpy_balance: int, btc_balance: float,
     jpy_rate = jpy_balance / total
     msg = f'''{message}
 ```
-Balance {total:,} JPY
-- {jpy_rate:.1%} / {jpy_balance:,.0f} JPY
-- {1-jpy_rate:.1%} / {int(btc_balance * ltp):,.0f} JPY ({btc_balance:.3f} BTC)
+Balance ¥{total:,}
+JPY: {jpy_rate:.1%}/¥{jpy_balance:,.0f}
+BTC: {1-jpy_rate:.1%}/¥{int(btc_balance * ltp):,.0f} (₿{btc_balance:.3f})
 ```
 '''
     if swu:
