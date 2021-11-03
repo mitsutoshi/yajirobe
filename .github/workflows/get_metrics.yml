@@ -1,16 +1,20 @@
 on:
   schedule:
-      - cron: '0 */1 * * *'
+      - cron: '0 */2 * * *'
   push:
     paths:
-        - '.github/workflows/rebalance.yml'
-        - 'rebalance.py'
+        - '.github/workflows/get_metrics.yml'
+        - 'get_balance.py'
+        - 'get_deposit.py'
+        - 'get_execution.py'
 jobs:
-  rebalance:
+  get-metrics:
     env:
       LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
       LIQUID_API_SECRET: ${{ secrets.LIQUID_API_SECRET }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
     runs-on: [ubuntu-latest]
     steps:
       - name: Checkout
@@ -24,5 +28,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv --upgrade-strategy=only-if-needed
           pipenv install
-      - name: Run
-        run: pipenv run rebalance
+      - name: Get Execution
+        run: pipenv run get_execution
+      - name: Get Balance
+        run: pipenv run get_balance
+      - name: Get Deposit
+        run: pipenv run get_deposit

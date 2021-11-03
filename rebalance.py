@@ -68,14 +68,14 @@ def main():
     jpy_rate = b_jpy / total
     logger.info(f'Balance {total} JPY => {int(b_jpy)} JPY ({jpy_rate:.1%}), {b_btc:.3f} BTC ({1-jpy_rate:.1%}, {int(b_btc * ltp)} JPY)')
 
-    # cancel exist orders
     lqd.cancel_all_orders()
 
-    # create an order
     t = 'No need to change balance.'
     qty = estimate_order_qty(b_jpy, b_btc, ltp)
     logger.info(f'Estimated order quantity: {qty:.8f}')
     if qty >= MIN_ORDER_QUANTITY[PRODUCT_ID_BTCJPY]:
+
+        # create an order
         side = get_order_side(b_jpy, b_btc, ltp)
         logger.info(f'Order will be created. [product=BTCJPY, side={side}, price={ltp}, qty={qty:.8f}]')
         try:
@@ -86,7 +86,6 @@ def main():
             t = f'{e}'
     logger.info(t)
 
-    # send message
     send_result_notification(t, b_jpy, b_btc, ltp)
 
 

@@ -32,12 +32,19 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
         qty = float(e['quantity'])
         price = float(e['price'])
         amount = qty * price
-        pos_size = pos_size + qty if e['my_side'] == 'buy' else pos_size - qty
-        pos_price += amount if e['my_side'] == 'buy' else avg_buy_price * qty * -1
-        avg_buy_price = pos_price / pos_size
-        profit = (price - avg_buy_price) * qty if e['my_side'] == 'sell' else 0.0
 
-        print(f"time={t}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, side={e['my_side']:<4}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_pric={avg_buy_price}, profit={profit if profit else 0:.0f}")
+        if e['my_side'] == 'buy':
+            pos_size += qty
+            pos_price += amount
+            avg_buy_price = pos_price / pos_size
+            profit = 0.0
+        else:
+            pos_size -= qty
+            pos_price -= avg_buy_price * qty
+            avg_buy_price = pos_price / pos_size
+            profit = (price - avg_buy_price) * qty
+
+        print(f"time={t}, side={e['my_side']:<4}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_price={avg_buy_price}, profit={profit if profit else 0}")
         point = {
                 'measurement': measurement_name,
                 'time': t,
@@ -86,7 +93,7 @@ def main():
         print(f"get recently execution history since '{d}'")
         points = get_executions_me(pos_size, pos_price, timestamp=d.timestamp())
 
-    idb.write_points(points)
+    #idb.write_points(points)
 
 
 if __name__ == '__main__':
