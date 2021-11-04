@@ -93,7 +93,7 @@ def main():
         print(f"get recently execution history since '{d}'")
         points = get_executions_me(pos_size, pos_price, timestamp=d.timestamp())
 
-    #idb.write_points(points)
+    idb.write_points(points)
 
 
 if __name__ == '__main__':
