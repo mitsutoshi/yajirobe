@@ -1,52 +1,76 @@
 import os
+import json
 import csv
 import time
-import argparse
 from datetime import datetime
 
 from liquidpy.api import Liquid, PRODUCT_ID_BTCJPY
 from influxdb import InfluxDBClient
 
 
+lqd = Liquid()
+idb = InfluxDBClient(host=os.environ['DB_HOST'],
+                     port=os.environ['DB_PORT'],
+                     username=os.getenv('DB_USER', ''),
+                     password=os.getenv('DB_PASS', ''),
+                     database=os.environ['DB_NAME'])
+
 first_record_created_at = 1604411435
-measurement_name = 'executions2'
+measurement_my_exec = 'my_executions'
 
 
-def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at, limit=1000):
+def select_latest_record(msnt_name: str):
+    '''Get the latest record time of executions.
 
-    lqd = Liquid()
-    ex = lqd.get_executions_me(product_id=PRODUCT_ID_BTCJPY, timestamp=timestamp, limit=limit)
+    Parameters
+    ----------
+    msnt_name: str
+        InfluxDB's measurement name.
+
+    Returns
+    -------
+    influxdb.resultset.ResultSet
+        Latest record of specified measurement.
+    '''
+    return idb.query(f'select * from "{msnt_name}" order by time desc limit 1')
+
+
+def get_my_executions(since=first_record_created_at, limit=1000):
+    ex = lqd.get_executions_me(
+            product_id=PRODUCT_ID_BTCJPY, limit=limit, page=1)
+    ex = ex['models'] if 'current_page' in ex else ex
     ex = sorted(ex, key=lambda x: x['timestamp'])
-    since = datetime.fromtimestamp(int(float(ex[0]['timestamp'])))
-    until = datetime.fromtimestamp(int(float(ex[-1]['timestamp'])))
-    print(f"fetched: len={len(ex)}, since={since}, until={until}")
+    return [e for e in ex if int(float(e['timestamp'])) >= first_record_created_at]
+
+
+def a(executions, last_exec):
+
+    pos_size = last_exec['pos_size'] if last_exec else 0
+    pos_price = last_exec['pos_price'] if last_exec else 0
 
     points = []
-    pos_size = pos_size
-    pos_price = pos_price
     avg_buy_price = 0
 
-    for e in ex:
+    for e in executions:
 
         t = datetime.utcfromtimestamp(int(float(e['timestamp'])))
         qty = float(e['quantity'])
         price = float(e['price'])
-        amount = qty * price
 
         if e['my_side'] == 'buy':
             pos_size += qty
-            pos_price += amount
+            pos_price += (qty * price)
             avg_buy_price = pos_price / pos_size
             profit = 0.0
         else:
             pos_size -= qty
             pos_price -= avg_buy_price * qty
-            avg_buy_price = pos_price / pos_size
+            #avg_buy_price = pos_price / pos_size
             profit = (price - avg_buy_price) * qty
 
-        print(f"time={t}, side={e['my_side']:<4}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_price={avg_buy_price}, profit={profit if profit else 0}")
+        print(f"{t}, {e['my_side']}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_price={avg_buy_price}, profit={profit if profit else 0}")
         point = {
-                'measurement': measurement_name,
+                'measurement': measurement_my_exec,
                 'time': t,
                 'tags': {
                     'side': e['my_side'],
@@ -56,7 +80,7 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
                     'price': price,
                     'pos_size': pos_size,
                     'pos_price': pos_price,
-                    'avg_buy_price': avg_buy_price,
+                    'avg_buy_price': int(avg_buy_price),
                     'profit': profit,
                     }
                 }
@@ -64,35 +88,29 @@ def get_executions_me(pos_size=0, pos_price=0, timestamp=first_record_created_at
     return points
 
 
+def get_executions():
+
+    since = None
+    last_exec = None
+
+    # get the latest record time of executions
+    results = select_latest_record(measurement_my_exec)
+    if results:
+        last_exec = [r[0] for r in results][0]
+        print(f'Latest record of {measurement_my_exec}.\n{json.dumps(last_exec, indent=True)}')
+        since = datetime.strptime(last_exec['time'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
+
+    # get executions by rest api
+    print(f"Get the executions since {since}.")
+    executions = get_my_executions(since=since)
+    print(f"Number of my execution is {len(executions)}.")
+
+    return a(executions, last_exec)
+
+
 def main():
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--all', action='store_true', required=False, dest='all')
-    args = parser.parse_args()
-
-    idb = InfluxDBClient(host=os.environ['DB_HOST'],
-                         port=os.environ['DB_PORT'],
-                         username=os.getenv('DB_USER', ''),
-                         password=os.getenv('DB_PASS', ''),
-                         database=os.environ['DB_NAME'])
-
-    if args.all:
-        points = get_executions_me()
-
-    else:
-
-        # get the latest record time of executions
-        results = idb.query(f'select * from "{measurement_name}" order by time desc limit 1')
-        last_time = max([r[0]['time'] for r in results])
-        pos_size = max([r[0]['pos_size'] for r in results])
-        pos_price = max([r[0]['pos_price'] for r in results])
-        print(f"recorded lastest execution: time={last_time}, pos_size={pos_size}, pos_price={pos_price}")
-
-        # get recently executions by rest api
-        d = datetime.strptime(last_time, '%Y-%m-%dT%H:%M:%SZ')
-        print(f"get recently execution history since '{d}'")
-        points = get_executions_me(pos_size, pos_price, timestamp=d.timestamp())
-
+    points = []
+    points.extend(get_executions())
     idb.write_points(points)
 
 
