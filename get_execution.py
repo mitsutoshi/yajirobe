@@ -15,8 +15,8 @@ idb = InfluxDBClient(host=os.environ['DB_HOST'],
                      password=os.getenv('DB_PASS', ''),
                      database=os.environ['DB_NAME'])
 
-first_record_created_at = 1604411435
-measurement_my_exec = 'my_executions'
+FIRST_RECORD_CREATED_AT = 1604411435
+MEASUREMENT_MY_EXEC = 'my_executions'
 
 
 def select_latest_record(msnt_name: str):
@@ -35,15 +35,15 @@ def select_latest_record(msnt_name: str):
     return idb.query(f'select * from "{msnt_name}" order by time desc limit 1')
 
 
-def get_my_executions(since=first_record_created_at, limit=1000):
+def get_my_executions(since=FIRST_RECORD_CREATED_AT, limit=1000):
     ex = lqd.get_executions_me(
             product_id=PRODUCT_ID_BTCJPY, limit=limit, page=1)
     ex = ex['models'] if 'current_page' in ex else ex
     ex = sorted(ex, key=lambda x: x['timestamp'])
-    return [e for e in ex if int(float(e['timestamp'])) >= first_record_created_at]
+    return [e for e in ex if int(float(e['timestamp'])) >= FIRST_RECORD_CREATED_AT]
 
 
-def a(executions, last_exec):
+def create_executions_point(executions, last_exec):
 
     pos_size = last_exec['pos_size'] if last_exec else 0
     pos_price = last_exec['pos_price'] if last_exec else 0
@@ -70,7 +70,7 @@ def a(executions, last_exec):
 
         print(f"{t}, {e['my_side']}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_price={avg_buy_price}, profit={profit if profit else 0}")
         point = {
-                'measurement': measurement_my_exec,
+                'measurement': MEASUREMENT_MY_EXEC,
                 'time': t,
                 'tags': {
                     'side': e['my_side'],
@@ -94,10 +94,10 @@ def get_executions():
     last_exec = None
 
     # get the latest record time of executions
-    results = select_latest_record(measurement_my_exec)
+    results = select_latest_record(MEASUREMENT_MY_EXEC)
     if results:
         last_exec = [r[0] for r in results][0]
-        print(f'Latest record of {measurement_my_exec}.\n{json.dumps(last_exec, indent=True)}')
+        print(f'Latest record of {MEASUREMENT_MY_EXEC}.\n{json.dumps(last_exec, indent=True)}')
         since = datetime.strptime(last_exec['time'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
 
     # get executions by rest api
@@ -105,7 +105,7 @@ def get_executions():
     executions = get_my_executions(since=since)
     print(f"Number of my execution is {len(executions)}.")
 
-    return a(executions, last_exec)
+    return create_executions_point(executions, last_exec)
 
 
 def main():

@@ -7,7 +7,6 @@ from liquidpy.api import Liquid, PRODUCT_ID_ETHJPY
 from influxdb import InfluxDBClient
 
 
-first_record_created_at = 1604411435
 lqd = Liquid()
 idb = InfluxDBClient(host=os.environ['DB_HOST'],
                      port=os.environ['DB_PORT'],
@@ -15,9 +14,12 @@ idb = InfluxDBClient(host=os.environ['DB_HOST'],
                      password=os.getenv('DB_PASS', ''),
                      database=os.environ['DB_NAME'])
 
+FIRST_RECORD_CREATED_AT = 1604411435
+MEASUREMENT_MY_EXEC = 'my_executions'
+
 
 def get_last_pos_price():
-    executions = idb.query(f'select last(pos_price) from "executions2"')
+    executions = idb.query(f'select last(pos_price) from "{MEASUREMENT_MY_EXEC}"')
     last_pos_price = max([e[0]['last'] for e in executions])
     print(f'latest position value: {int(last_pos_price)}')
     return last_pos_price
@@ -28,7 +30,7 @@ if __name__ == '__main__':
     # get info from liquid
     balances = lqd.get_accounts_balance()
     products = lqd.get_products()
-    ethjpy = lqd.get_executions_me(product_id=PRODUCT_ID_ETHJPY, timestamp=first_record_created_at, limit=1000)
+    ethjpy = lqd.get_executions_me(product_id=PRODUCT_ID_ETHJPY, timestamp=FIRST_RECORD_CREATED_AT, limit=1000)
 
     # calc ignore amount
     eth_buy_amount = sum([float(r['quantity']) * float(r['price']) for r in ethjpy if r['my_side'] == 'buy'])
