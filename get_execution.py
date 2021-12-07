@@ -4,7 +4,7 @@ import csv
 import time
 from datetime import datetime
 
-from liquidpy.api import Liquid, PRODUCT_ID_BTCJPY
+from liquidpy.api import Liquid, PRODUCT_ID_BTCJPY, PRODUCT_ID_ETHJPY
 from influxdb import InfluxDBClient
 
 
@@ -38,6 +38,12 @@ def select_latest_record(msnt_name: str):
 def get_my_executions(since=FIRST_RECORD_CREATED_AT, limit=1000):
     ex = lqd.get_executions_me(
             product_id=PRODUCT_ID_BTCJPY, limit=limit, page=1)
+
+    # if there are several pages, get only oldest page.
+    if ex['total_pages'] > 1:
+        ex = lqd.get_executions_me(
+                product_id=PRODUCT_ID_BTCJPY, limit=limit, page=ex['total_pages'])
+
     ex = ex['models'] if 'current_page' in ex else ex
     ex = sorted(ex, key=lambda x: x['timestamp'])
     return [e for e in ex if int(float(e['timestamp'])) >= FIRST_RECORD_CREATED_AT]
@@ -47,9 +53,9 @@ def create_executions_point(executions, last_exec):
 
     pos_size = last_exec['pos_size'] if last_exec else 0
     pos_price = last_exec['pos_price'] if last_exec else 0
+    avg_buy_price = last_exec['avg_buy_price'] if last_exec else 0
 
     points = []
-    avg_buy_price = 0
 
     for e in executions:
 
@@ -65,7 +71,6 @@ def create_executions_point(executions, last_exec):
         else:
             pos_size -= qty
             pos_price -= avg_buy_price * qty
-            #avg_buy_price = pos_price / pos_size
             profit = (price - avg_buy_price) * qty
 
         print(f"{t}, {e['my_side']}, qty={qty:.8f}, price={price:.0f}, pos_size={pos_size:.8f}, pos_price={pos_price:.0f}, avg_buy_price={avg_buy_price}, profit={profit if profit else 0}")
@@ -108,9 +113,68 @@ def get_executions():
     return create_executions_point(executions, last_exec)
 
 
+def get_last_pos_price():
+    executions = idb.query(f'select last(pos_price) from "{MEASUREMENT_MY_EXEC}"')
+    last_pos_price = max([e[0]['last'] for e in executions])
+    print(f'latest position value: {int(last_pos_price)}')
+    return last_pos_price
+
+
+def get_balances():
+
+    # get info from liquid
+    balances = lqd.get_accounts_balance()
+    products = lqd.get_products()
+    ethjpy = lqd.get_executions_me(
+            product_id=PRODUCT_ID_ETHJPY, timestamp=FIRST_RECORD_CREATED_AT, limit=1000)
+
+    # calc ignore amount
+    eth_buy_amount = sum([float(r['quantity']) * float(r['price']) for r in ethjpy if r['my_side'] == 'buy'])
+    eth_sell_amount = sum([float(r['quantity']) * float(r['price']) for r in ethjpy if r['my_side'] == 'sell'])
+    ignore_amount = eth_buy_amount - eth_sell_amount
+    print(f'ignore amount: {ignore_amount} JPY')
+
+    # calc capital
+    results = idb.query(f'select sum(amount) from deposits_history where time > \'2020-11-01\'')
+    deposit_sum = max([r[0]['sum'] for r in results])
+    capital = deposit_sum - ignore_amount
+    print(f'deposit amount: {deposit_sum} JPY, capital: {capital}')
+
+    now = datetime.utcfromtimestamp(time.time())
+
+    points = []
+    for b in balances:
+        value = float(b['balance'])
+        if value > 0 and b['currency'] != 'USD':
+
+            amount_jpy = value
+            for p in products:
+                if p['currency'] == 'JPY' and p['base_currency'] == b['currency']:
+                    amount_jpy = value * float(p['last_traded_price'])
+
+            p = {
+                'measurement': 'balances',
+                'time': now,
+                'tags': {
+                    'currency': b['currency']
+                },
+                'fields': {
+                    'amount': value,
+                    'amount_jpy': amount_jpy,
+                    'unrealized_pnl': amount_jpy - get_last_pos_price() if b['currency'] == 'BTC' else None,
+                    'capital': capital,
+                }
+            }
+            points.append(p)
+            print(f'data -> {p}')
+
+    return points
+
+
 def main():
     points = []
     points.extend(get_executions())
+    points.extend(get_balances())
     idb.write_points(points)
 
 
