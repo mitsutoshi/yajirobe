@@ -40,10 +40,6 @@ def get_my_executions(since=FIRST_RECORD_CREATED_AT, limit=1000):
             product_id=PRODUCT_ID_BTCJPY, limit=limit, page=1)
 
     # if there are several pages, get only oldest page.
-    if ex['total_pages'] > 1:
-        ex = lqd.get_executions_me(
-                product_id=PRODUCT_ID_BTCJPY, limit=limit, page=ex['total_pages'])
-
     ex = ex['models'] if 'current_page' in ex else ex
     ex = sorted(ex, key=lambda x: x['timestamp'])
     return [e for e in ex if int(float(e['timestamp'])) >= FIRST_RECORD_CREATED_AT]
@@ -174,7 +170,7 @@ def get_balances():
 def main():
     points = []
     points.extend(get_executions())
-    points.extend(get_balances())
+    #points.extend(get_balances())
     idb.write_points(points)
 
 
