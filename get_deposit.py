@@ -31,7 +31,7 @@ def exists(history, data) -> bool:
 
 
 
-def deposits_history():
+def deposits_history(h):
     return {
             'measurement': 'deposits_history',
             'time': datetime.fromtimestamp(int(h['created_at']), tz=tz),
