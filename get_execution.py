@@ -56,6 +56,10 @@ def create_executions_point(executions, last_exec):
     for e in executions:
 
         t = datetime.utcfromtimestamp(int(float(e['timestamp'])))
+        if last_exec:
+            if t <= datetime.strptime(last_exec['time'], '%Y-%m-%dT%H:%M:%SZ'):
+                continue
+
         qty = float(e['quantity'])
         price = float(e['price'])
 
