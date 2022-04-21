@@ -3,7 +3,7 @@
 ![.github/workflows/rebalance.yml](https://github.com/mitsutoshi/yajirobe/workflows/.github/workflows/rebalance.yml/badge.svg)
 
 yajirobe is a bot rebalancing cryptocurrency assets.
-Amount of fiat and cryptocurency are adjusted to 50%. This bot is for using on Liquid.
+Amount of fiat and cryptocurency are adjusted to 50%. This bot is for using on Liquid by FTX.
 
 ## How to install
 
