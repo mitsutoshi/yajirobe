@@ -45,15 +45,27 @@ def get_order_side(jpy_balance, btc_balance, ltp) -> str:
 def send_result_notification(message: str, jpy_balance: int, btc_balance: float, ltp: float) -> None:
     total = int(jpy_balance + btc_balance * ltp)
     jpy_rate = jpy_balance / total
-    msg = f'''{message}
+    text = f'''{message}
 ```
 Balance ¥{total:,}
 JPY: {jpy_rate:.1%}/¥{jpy_balance:,.0f}
 BTC: {1-jpy_rate:.1%}/¥{int(btc_balance * ltp):,.0f} (₿{btc_balance:.3f})
 ```
 '''
+    send_notificatoin(text, "good")
+
+
+def send_notificatoin(text: str, color: str) -> None:
     if swu:
-        requests.post(swu, data=json.dumps({'text': msg}))
+        requests.post(swu, data=json.dumps({
+            "attachments": [
+                {
+                    "title": "yajirobe",
+                    "text": text,
+                    "color": color,
+                }
+            ]
+        }))
 
 
 def main():
@@ -70,7 +82,6 @@ def main():
 
     lqd.cancel_all_orders()
 
-    t = 'No need to change balance.'
     qty = estimate_order_qty(b_jpy, b_btc, ltp)
     logger.info(f'Estimated order quantity: {qty:.8f}')
     if qty >= MIN_ORDER_QUANTITY[PRODUCT_ID_BTCJPY]:
@@ -81,11 +92,15 @@ def main():
         try:
             lqd.create_order(product_id=PRODUCT_ID_BTCJPY, side=side, quantity=qty, price=ltp)
             t = f'Order has been created. [BTCJPY, {side}, {ltp} JPY, {qty:.8f} BTC]'
-            logger.info(t)
         except Exception as e:
-            t = f'{e}'
-    logger.info(t)
+            t = 'Failed to create order.'
+            logger.exception(t)
+            send_notificatoin(f"{t} [{e}]", "danger")
 
+    else:
+        t = 'No need to change balance.'
+
+    logger.info(t)
     send_result_notification(t, b_jpy, b_btc, ltp)
 
 

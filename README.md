@@ -18,7 +18,7 @@ Amount of fiat and cryptocurency are adjusted to 50%. This bot is for using on L
 3. Create env.
 
     ```sh
-    pipenv install
+    pipenv sync
     ```
 
 ## How to run
