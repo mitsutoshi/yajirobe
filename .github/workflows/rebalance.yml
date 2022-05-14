@@ -25,4 +25,4 @@ jobs:
           pip install pipenv --upgrade-strategy=only-if-needed
           pipenv install
       - name: Run
-        run: pipenv run rebalance
+        run: pipenv run rebalance -s 'BTC/JPY'

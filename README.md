@@ -33,11 +33,21 @@ Amount of fiat and cryptocurency are adjusted to 50%. This bot is for using on L
     |API_SECRET|No|Your API secret of Liquid.|
     |SLACK_WEBHOOK_URL|Yes|Slack Webhook URL. Set value if you need to send a notification about result of process.|
 
-2. Run by pipenv.
+2. Run pipenv with the symbol name you want to rebalance.
 
     ```sh
-    pipenv run rebalance
+    pipenv run rebalance -s 'BTC/JPY'
     ```
+
+    You can specify following symbols.
+
+    * BTC/JPY
+    * ETH/JPY
+    * XRP/JPY
+    * BCH/JPY
+    * QASH/JPY
+    * FTT/JPY
+    * SOL/JPY
 
 ### Run regularly on Github
 
