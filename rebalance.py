@@ -100,7 +100,7 @@ def main():
         raise ValueError(f"Symbol you specified is not supported. [{args.symbol}]")
     product_id = SYMBOLS[args.symbol]
     coin = args.symbol[0:args.symbol.index('/')]
-    print(f"{product_id}, {coin}")
+    logger.info(f"Start rebalancing of {args.symbol} (product_id={product_id}).")
 
     # get current coin price
     ltp = get_coin_ltp(product_id)
