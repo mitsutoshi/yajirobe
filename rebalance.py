@@ -84,9 +84,7 @@ def main():
     logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={ltp}, qty={qty:.8f}]")
 
     try:
-        # TODO
-        #order_id = rebalancer.create_order(side=side, quantity=qty, price=ltp)
-        order_id = rebalancer.create_order(side='buy', quantity=qty, price=2000000)
+        order_id = rebalancer.create_order(side=side, quantity=qty, price=ltp)
         t = f"{side.capitalize()} {qty:.8f} {rebalancer.trade_coin} for {ltp} {rebalancer.base_coin} on {args.exchange.lower()}. [order_id={order_id}]"
         logger.info(t)
     except Exception as e:

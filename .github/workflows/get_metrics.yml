@@ -4,9 +4,9 @@ on:
   push:
     paths:
         - '.github/workflows/get_metrics.yml'
-        - 'get_balance.py'
-        - 'get_deposit.py'
-        - 'get_execution.py'
+        - 'get_metrics/et_balance.py'
+        - 'get_metrics/et_deposit.py'
+        - 'get_metrics/et_execution.py'
         - 'Pipfile'
 jobs:
   get-metrics:
