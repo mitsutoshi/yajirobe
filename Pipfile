@@ -11,6 +11,7 @@ requests = "*"
 pyjwt = "*"
 influxdb = "*"
 liquidpy = {git = "https://github.com/mitsutoshi/liquidpy",ref = "master"}
+python-bitbankcc = {git = "https://github.com/bitbankinc/python-bitbankcc"}
 
 [requires]
 python_version = "3.10"
