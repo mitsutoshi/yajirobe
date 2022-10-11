@@ -229,7 +229,6 @@ class GmoRebalancer(Rebalancer):
                 'price': str(int(price)),
                 'size': str(quantity),
                 }
-        print(params)
         headers = self.__create_auth_header('POST', path, json.dumps(params))
         res = requests.post(f"{__class__.prv_url}{path}", headers=headers, data=json.dumps(params))
         body = json.loads(res.text)
