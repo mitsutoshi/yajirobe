@@ -106,7 +106,7 @@ def main():
         raise e
 
     # create and send notification
-    total = int(bal[rebalancer.trade_coin] * ltp + bal[rebalancer.trade_coin])
+    total = int(bal[rebalancer.trade_coin] * ltp + bal[rebalancer.base_coin])
     base_coin_rate = bal[rebalancer.base_coin] / total
     text = f'''{t}
 ```
