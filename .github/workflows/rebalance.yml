@@ -26,4 +26,4 @@ jobs:
           pip install pipenv --upgrade-strategy=only-if-needed
           pipenv install
       - name: Run
-        run: python rebalance -e gmo -s 'BTC/JPY'
+        run: python rebalance.py -e gmo -s 'BTC/JPY'
