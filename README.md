@@ -2,66 +2,50 @@
 
 ![.github/workflows/rebalance.yml](https://github.com/mitsutoshi/yajirobe/workflows/.github/workflows/rebalance.yml/badge.svg)
 
-yajirobe is a bot rebalancing cryptocurrency assets.
-Amount of fiat and cryptocurency are adjusted to 50%. This bot is for using on Liquid by FTX.
+yajirobe is a script to rebalance cryptocurrency assets. Amount of fiat and cryptocurency are adjusted to 50%.
 
-## How to install
+## Supported Exchanges
 
-1. Clone this repository.
-
-2. Change current directory.
-
-    ```sh
-    cd yajirobe
-    ```
-
-3. Create env.
-
-    ```sh
-    pipenv sync
-    ```
+* Liquid by FTX
+* bitbank
+* GMO Coin
 
 ## How to run
 
-### Run on local machine
+### Run on Github
 
-1. Create .env file and edit it.
+This repository uses Github Actions to run rebalancing script regularly.
 
-    |NAME|OPTIONAL|CONTENT|
+1. Fork this repository to your account.
+
+2. Add secrets for Github Actions (Settings -> Secrets -> Actions).
+
+    |SECRET NAME|OPTIONAL|CONTENT|
     |---|---|---|
-    |API_KEY|No|Your API key of Liquid.|
-    |API_SECRET|No|Your API secret of Liquid.|
+    |API_KEY|No|Your API key of the exchange you want to rebalance.|
+    |API_SECRET|No|Your API secret of the exchange you want to rebalance.|
     |SLACK_WEBHOOK_URL|Yes|Slack Webhook URL. Set value if you need to send a notification about result of process.|
 
-2. Run pipenv with the symbol name you want to rebalance.
-
-    ```sh
-    pipenv run rebalance -s 'BTC/JPY'
-    ```
-
-    You can specify following symbols.
-
-    * BTC/JPY
-    * ETH/JPY
-    * XRP/JPY
-    * BCH/JPY
-    * QASH/JPY
-    * FTT/JPY
-    * SOL/JPY
-
-### Run regularly on Github
-
-rebalancing is need to run regularly, so this bot uses Github Actions.
-
-1. Add secrets `API_KEY`, `API_SECRET`, and `SLACK_WEBHOOK_URL` on Github.
-
-2. Edit a cron schedule in [rebalance.yml](.github/workflows/rebalance.yml). Its default setting is to run every four hours.
+3. Edit running schedule in [rebalance.yml](.github/workflows/rebalance.yml) if necessary. The execution schedule can be specified in cron format. Default setting is to run script every hours.
 
     ```yml
     on: 
       schedule:
-          - cron: '0 */4 * * *'
+          - cron: '0 */1 * * *'
     ```
 
-3. Push above modification to repository.
+### Run on local machine
 
+1. Clone this repository.
+
+2. Create .env file and add secrets into file.
+
+3. Run pipenv rebalance.
+
+    ```sh
+    python rebalance.py -e EXCHANGE -s SYMBOL
+    ```
+
+    `EXCHANGE` is exchange's name. `SYMBOL` must be specified by two coin namas with slash in between such as `BTC/JPY`.
+
+    Symbols can be specified depend on each exchange.

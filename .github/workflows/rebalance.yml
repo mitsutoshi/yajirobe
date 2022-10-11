@@ -8,8 +8,8 @@ on:
 jobs:
   rebalance:
     env:
-      LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
-      LIQUID_API_SECRET: ${{ secrets.LIQUID_API_SECRET }}
+      API_KEY: ${{ secrets.API_KEY }}
+      API_SECRET: ${{ secrets.API_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     runs-on: [ubuntu-latest]
     steps:
@@ -25,4 +25,4 @@ jobs:
           pip install pipenv --upgrade-strategy=only-if-needed
           pipenv install
       - name: Run
-        run: pipenv run rebalance -s 'BTC/JPY'
+        run: python rebalance -e gmo -s 'BTC/JPY'

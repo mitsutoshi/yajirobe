@@ -10,28 +10,33 @@ import logging
 import argparse
 import requests
 
-from exchanges import Rebalancer, LiquidRebalancer, BitbankRebalancer
+from exchanges import Rebalancer, LiquidRebalancer, BitbankRebalancer, GmoRebalancer
 
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s %(asctime)s %(message)s')
 logger = logging.getLogger()
 
 
-def estimate_order_qty(coin_balance: float, base_balance: float, price: float) -> (str, float):
+def estimate_order(coin_balance: float, base_balance: float, price: float) -> (str, float):
+    '''Decide the order side and size.
+    '''
 
     # calculate order quantity
     total = coin_balance * price + base_balance
     rate = 0.5
     half_balance = total * rate
     diff = half_balance - base_balance
+    quantity = round(abs(diff) / price, 8)
 
     # determine order side
     side = 'sell' if diff > 0 else 'buy' if diff < 0 else None
 
-    return side, round(abs(diff) / price, 8)
+    return side, quantity
 
 
 def send_notificatoin(title: str, text: str, color: str) -> None:
+    '''Send notification of the order result by Slack.
+    '''
     swu = os.getenv('SLACK_WEBHOOK_URL')
     if swu:
         requests.post(swu, data=json.dumps({
@@ -60,6 +65,8 @@ def main():
         rebalancer = LiquidRebalancer(args.symbol)
     elif args.exchange.lower() == 'bitbank':
         rebalancer = BitbankRebalancer(args.symbol)
+    elif args.exchange.lower() == 'gmo':
+        rebalancer = GmoRebalancer(args.symbol)
     else:
         raise ValueError(f"exchange is not supported. [{args.exchange}]")
 
@@ -76,13 +83,20 @@ def main():
     rebalancer.cancel_all_orders()
     logger.info(f'Canceled active orders')
 
-    # estimate order quantity
-    side, qty = estimate_order_qty(bal[rebalancer.trade_coin], bal[rebalancer.base_coin], ltp)
+    # estimate order side and quantity
+    side, qty = estimate_order(bal[rebalancer.trade_coin], bal[rebalancer.base_coin], ltp)
     if qty < rebalancer.get_min_order_size():
         logger.info('No need to change balance.')
         return
-    logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={ltp}, qty={qty:.8f}]")
 
+    # adjust quantity
+    min_unit = rebalancer.get_min_order_unit()
+    start = str(min_unit).find('.') + 1
+    prec = len(str(min_unit)[start:])
+    qty_s = str(qty)
+    qty = float(qty_s[0:qty_s.find('.') + prec + 1])
+
+    logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={ltp}, qty={qty:.8f}]")
     try:
         order_id = rebalancer.create_order(side=side, quantity=qty, price=ltp)
         t = f"{side.capitalize()} {qty:.8f} {rebalancer.trade_coin} for {ltp} {rebalancer.base_coin} on {args.exchange.lower()}. [order_id={order_id}]"
@@ -109,4 +123,4 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logger.exception('Failed to rebalance.')
-        send_notificatoin('Failed to rebalance', e, "danger")
+        send_notificatoin('Failed to rebalance', e.__str__(), 'danger')

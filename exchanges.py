@@ -1,6 +1,11 @@
-import os
-import logging
 from abc import ABCMeta, abstractmethod
+import hashlib
+import hmac
+import logging
+import os
+import requests
+import time
+
 from liquidpy.api import *
 import python_bitbankcc
 
@@ -34,7 +39,7 @@ class Rebalancer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def create_order(self, side: str, quantity: float, price: float) -> float:
+    def create_order(self, side: str, quantity: float, price: float) -> str:
         pass
 
     @property
@@ -44,6 +49,10 @@ class Rebalancer(metaclass=ABCMeta):
     @property
     def base_coin(self) -> str:
         return self.asset2
+
+    @abstractmethod
+    def get_min_order_unit(self) -> float:
+        pass
 
 
 class LiquidRebalancer(Rebalancer):
@@ -84,8 +93,11 @@ class LiquidRebalancer(Rebalancer):
     def get_min_order_size(self) -> float:
         return MIN_ORDER_QUANTITY[self.product_id]
 
-    def create_order(self, side: str, quantity: float, price: float) -> int:
+    def create_order(self, side: str, quantity: float, price: float) -> str:
         return self.client.create_order(self.product_id, side, quantity, price)['id']
+
+    def get_min_order_unit(self) -> float:
+        raise NotImplementedError
 
 
 class BitbankRebalancer(Rebalancer):
@@ -123,5 +135,114 @@ class BitbankRebalancer(Rebalancer):
     def get_min_order_size(self) -> float:
         return 0.0001
 
-    def create_order(self, side: str, quantity: float, price: float) -> int:
+    def create_order(self, side: str, quantity: float, price: float) -> str:
         return self.prv.order(self.pair, price, quantity, side, 'limit', True)['order_id']
+
+    def get_min_order_unit(self) -> float:
+        raise NotImplementedError
+
+
+class GmoRebalancer(Rebalancer):
+
+    pub_url: str = 'https://api.coin.z.com/public'
+
+    prv_url: str = 'https://api.coin.z.com/private'
+
+    symbols = ['BTC', 'ETH', 'XRP']
+
+    min_order_size: dict[str, float] = {
+            'BTC': 0.0001,
+            'ETH': 0.01,
+            'XRP': 1,
+            }
+
+    min_order_unit: dict[str, float] = {
+            'BTC': 0.0001,
+            'ETH': 0.0001,
+            'XRP': 1,
+            }
+
+    def __init__(self, symbol: str):
+        super().__init__(symbol)
+        self.api_key = os.getenv('API_KEY')
+        self.api_secret = os.getenv('API_SECRET')
+        coins = symbol.split(SYMBOL_SEPARATOR)
+        self.asset1 = coins[0].upper()
+        self.asset2 = coins[1].upper()
+        if self.asset1 not in __class__.symbols:
+            raise ValueError(f"Asset is not supported. [{self.asset1}]")
+
+    def __create_auth_header(self, method: str, path: str, data: str = '') -> dict:
+        timestamp = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
+        text = timestamp + method + path + data
+        sign = hmac.new(
+                bytes(self.api_secret.encode('ascii')),
+                bytes(text.encode('ascii')),
+                hashlib.sha256
+                ).hexdigest()
+        return {
+            'API-KEY': self.api_key,
+            'API-TIMESTAMP': timestamp,
+            'API-SIGN': sign,
+        }
+
+
+    def get_balance(self) -> dict[str, float]:
+        path = '/v1/account/assets'
+        headers = self.__create_auth_header('GET', path)
+        res = requests.get(f"{__class__.prv_url}{path}", headers=headers)
+        balance = json.loads(res.text)
+        for b in balance['data']:
+            if b['symbol'] == self.asset1:
+                asset1 = float(b['amount'])
+            elif b['symbol'] == self.asset2:
+                asset2 = float(b['amount'])
+
+        if not asset1 and not asset2:
+            raise SystemError(f"Neither coin has a balance. [{self.asset1}, {self.asset2}]")
+        return {self.asset1: asset1, self.asset2: asset2}
+
+    def cancel_all_orders(self):
+        logger.info(f"Cancel all orders.")
+        path = '/v1/cancelBulkOrder'
+        params = {'symbols': [self.asset1]}
+        headers = self.__create_auth_header('POST', path, json.dumps(params))
+        res = requests.post(f"{__class__.prv_url}{path}", headers=headers, data=json.dumps(params))
+        body = json.loads(res.text)
+        if body['status'] != 0:
+            raise SystemError('Failed to cancel orders.')
+
+    def get_ltp(self) -> float:
+        res = requests.get(f"{__class__.pub_url}/v1/ticker?symbol={self.asset1}")
+        ticker = json.loads(res.text)
+        return float(ticker['data'][0]['last'])
+
+    def get_min_order_size(self) -> float:
+        return __class__.min_order_size[self.asset1]
+
+    def create_order(self, side: str, quantity: float, price: float) -> str:
+        path = '/v1/order'
+        params = {
+                'symbol': f'{self.asset1}',
+                'side': side.upper(),
+                'executionType': 'LIMIT',
+                'price': str(int(price)),
+                'size': str(quantity),
+                }
+        print(params)
+        headers = self.__create_auth_header('POST', path, json.dumps(params))
+        res = requests.post(f"{__class__.prv_url}{path}", headers=headers, data=json.dumps(params))
+        body = json.loads(res.text)
+        if body['status'] != 0:
+            err_msg = ''
+            msg = body['messages']
+            for i in range(len(msg)):
+                err_msg += msg[i]['message_code'] + ':' + msg[i]['message_string']
+                if i < len(msg) - 1:
+                    err_msg += ', '
+            raise SystemError(f"Failed to create order: {err_msg}")
+        return str(body['data'])
+
+    def get_min_order_unit(self) -> float:
+        return __class__.min_order_unit[self.asset1]
+
