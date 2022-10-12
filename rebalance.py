@@ -23,10 +23,22 @@ def estimate_order(coin_balance: float, base_balance: float, price: float) -> (s
 
     # calculate order quantity
     total = coin_balance * price + base_balance
+
+    # calculate the current asset rate
+    base_asset_rate = base_balance / total
+    coin_asset_rate = 1.0 - base_asset_rate
+    asset_rate_diff = abs(base_asset_rate - coin_asset_rate)
+    logger.info(f"Asset rate: base={(base_asset_rate):.1%}, cryptocurrency={(coin_asset_rate):.1%}, diff={asset_rate_diff:.1%}")
+
+    # if difference is small(<1%), do not order to avoid cost
+    if asset_rate_diff < 0.01:
+        return (None, None,)
+
     rate = 0.5
     half_balance = total * rate
     diff = half_balance - base_balance
     quantity = round(abs(diff) / price, 8)
+
 
     # determine order side
     side = 'sell' if diff > 0 else 'buy' if diff < 0 else None
@@ -85,7 +97,8 @@ def main():
 
     # estimate order side and quantity
     side, qty = estimate_order(bal[rebalancer.trade_coin], bal[rebalancer.base_coin], ltp)
-    if qty < rebalancer.get_min_order_size():
+
+    if (not side or not qty) or (qty < rebalancer.get_min_order_size()):
         logger.info('No need to change balance.')
         return
 
@@ -96,17 +109,30 @@ def main():
     qty_s = str(qty)
     qty = float(qty_s[0:qty_s.find('.') + prec + 1])
 
-    logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={ltp}, qty={qty:.8f}]")
+    # adjust order price
+    order_price = ltp
+    bid_price = rebalancer.get_best_bid_price()
+    ask_price = rebalancer.get_best_ask_price()
+    print(f"bid: {bid_price}")
+    print(f"ask: {ask_price}")
+    if side == 'buy' and order_price > bid_price:
+        print(f"bid {ltp} -> {bid_price}")
+        order_price = bid_price + 1
+    elif side == 'sell' and order_price < ask_price:
+        print(f"ask {ltp} -> {bid_price}")
+        order_price = ask_price - 1
+
+    logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={order_price}, qty={qty:.8f}]")
     try:
-        order_id = rebalancer.create_order(side=side, quantity=qty, price=ltp)
-        t = f"{side.capitalize()} {qty:.8f} {rebalancer.trade_coin} for {ltp} {rebalancer.base_coin} on {args.exchange.lower()}. [order_id={order_id}]"
+        order_id = rebalancer.create_order(side=side, quantity=qty, price=order_price)
+        t = f"{side.capitalize()} {qty:.8f} {rebalancer.trade_coin} for {order_price} {rebalancer.base_coin} on {args.exchange.lower()}. [order_id={order_id}]"
         logger.info(t)
     except Exception as e:
         logger.error('Failed to create order.')
         raise e
 
     # create and send notification
-    total = int(bal[rebalancer.trade_coin] * ltp + bal[rebalancer.base_coin])
+    total = int(bal[rebalancer.trade_coin] * order_price + bal[rebalancer.base_coin])
     base_coin_rate = bal[rebalancer.base_coin] / total
     text = f'''{t}
 ```

@@ -54,6 +54,14 @@ class Rebalancer(metaclass=ABCMeta):
     def get_min_order_unit(self) -> float:
         pass
 
+    @abstractmethod
+    def get_best_ask_price(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_best_bid_price(self) -> float:
+        pass
+
 
 class LiquidRebalancer(Rebalancer):
 
@@ -99,6 +107,12 @@ class LiquidRebalancer(Rebalancer):
     def get_min_order_unit(self) -> float:
         raise NotImplementedError
 
+    def get_best_ask_price(self) -> float:
+        raise NotImplementedError
+
+    def get_best_bid_price(self) -> float:
+        raise NotImplementedError
+
 
 class BitbankRebalancer(Rebalancer):
 
@@ -141,6 +155,12 @@ class BitbankRebalancer(Rebalancer):
     def get_min_order_unit(self) -> float:
         raise NotImplementedError
 
+    def get_best_ask_price(self) -> float:
+        raise NotImplementedError
+
+    def get_best_bid_price(self) -> float:
+        raise NotImplementedError
+
 
 class GmoRebalancer(Rebalancer):
 
@@ -160,6 +180,28 @@ class GmoRebalancer(Rebalancer):
             'BTC': 0.0001,
             'ETH': 0.0001,
             'XRP': 1,
+            }
+
+    order_price_precision: dict[str, float] = {
+            'BTC': 0,
+            }
+
+    config = {
+            'BTC': {
+                'min_order_size': 0.0001,
+                'min_order_unit': 0.0001,
+                'order_price_prec': 0,
+                },
+            'ETH': {
+                'min_order_size': 0.01,
+                'min_order_unit': 0.0001,
+                'order_price_prec': 0,
+                },
+            'XRP': {
+                'min_order_size': 1,
+                'min_order_unit': 1,
+                'order_price_prec': 3,
+                },
             }
 
     def __init__(self, symbol: str):
@@ -192,6 +234,10 @@ class GmoRebalancer(Rebalancer):
         headers = self.__create_auth_header('GET', path)
         res = requests.get(f"{__class__.prv_url}{path}", headers=headers)
         balance = json.loads(res.text)
+
+        # check if error occurred
+        self.__raise_err_if_fail(balance)
+
         for b in balance['data']:
             if b['symbol'] == self.asset1:
                 asset1 = float(b['amount'])
@@ -209,8 +255,9 @@ class GmoRebalancer(Rebalancer):
         headers = self.__create_auth_header('POST', path, json.dumps(params))
         res = requests.post(f"{__class__.prv_url}{path}", headers=headers, data=json.dumps(params))
         body = json.loads(res.text)
-        if body['status'] != 0:
-            raise SystemError('Failed to cancel orders.')
+
+        # check if error occurred
+        self.__raise_err_if_fail(body)
 
     def get_ltp(self) -> float:
         res = requests.get(f"{__class__.pub_url}/v1/ticker?symbol={self.asset1}")
@@ -218,20 +265,45 @@ class GmoRebalancer(Rebalancer):
         return float(ticker['data'][0]['last'])
 
     def get_min_order_size(self) -> float:
-        return __class__.min_order_size[self.asset1]
+        return __class__.config[self.asset1]['min_order_size']
 
     def create_order(self, side: str, quantity: float, price: float) -> str:
+
+        # adjust price
+        prec = __class__.config[self.asset1]['order_price_prec']
+        price_s = str(price if prec > 0 else int(price))
+
         path = '/v1/order'
         params = {
                 'symbol': f'{self.asset1}',
                 'side': side.upper(),
                 'executionType': 'LIMIT',
-                'price': str(int(price)),
+                'price': price_s,
                 'size': str(quantity),
                 }
         headers = self.__create_auth_header('POST', path, json.dumps(params))
         res = requests.post(f"{__class__.prv_url}{path}", headers=headers, data=json.dumps(params))
         body = json.loads(res.text)
+
+        # check if error occurred
+        self.__raise_err_if_fail(body)
+
+        return str(body['data'])
+
+    def get_min_order_unit(self) -> float:
+        return __class__.config[self.asset1]['min_order_unit']
+
+    def get_best_ask_price(self) -> float:
+        res = requests.get(f"{__class__.pub_url}/v1/ticker?symbol={self.asset1}")
+        ticker = json.loads(res.text)
+        return float(ticker['data'][0]['ask'])
+
+    def get_best_bid_price(self) -> float:
+        res = requests.get(f"{__class__.pub_url}/v1/ticker?symbol={self.asset1}")
+        ticker = json.loads(res.text)
+        return float(ticker['data'][0]['bid'])
+
+    def __raise_err_if_fail(self, body) -> str:
         if body['status'] != 0:
             err_msg = ''
             msg = body['messages']
@@ -240,8 +312,4 @@ class GmoRebalancer(Rebalancer):
                 if i < len(msg) - 1:
                     err_msg += ', '
             raise SystemError(f"Failed to create order: {err_msg}")
-        return str(body['data'])
-
-    def get_min_order_unit(self) -> float:
-        return __class__.min_order_unit[self.asset1]
 
