@@ -112,13 +112,9 @@ def main():
     order_price = ltp
     bid_price = rebalancer.get_best_bid_price()
     ask_price = rebalancer.get_best_ask_price()
-    print(f"bid: {bid_price}")
-    print(f"ask: {ask_price}")
     if side == 'buy' and order_price > bid_price:
-        print(f"bid {ltp} -> {bid_price}")
         order_price = bid_price + 1
     elif side == 'sell' and order_price < ask_price:
-        print(f"ask {ltp} -> {bid_price}")
         order_price = ask_price - 1
 
     logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={order_price}, qty={qty:.8f}]")
