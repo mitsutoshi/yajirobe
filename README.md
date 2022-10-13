@@ -43,7 +43,7 @@ This repository uses Github Actions to run rebalancing script regularly.
 3. Run pipenv rebalance.
 
     ```sh
-    python rebalance.py -e EXCHANGE -s SYMBOL
+    pipenv run rebalance -e EXCHANGE -s SYMBOL
     ```
 
     `EXCHANGE` is exchange's name. `SYMBOL` must be specified by two coin namas with slash in between such as `BTC/JPY`.
