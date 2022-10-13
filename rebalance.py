@@ -39,7 +39,6 @@ def estimate_order(coin_balance: float, base_balance: float, price: float) -> (s
     diff = half_balance - base_balance
     quantity = round(abs(diff) / price, 8)
 
-
     # determine order side
     side = 'sell' if diff > 0 else 'buy' if diff < 0 else None
 
@@ -85,7 +84,7 @@ def main():
     # get balance
     bal = rebalancer.get_balance()
     bal_str = ', '.join([f'{v} {k}'for k, v in bal.items()])
-    logger.info(f"Balance: {bal_str}")
+    logger.debug(f"Balance: {bal_str}")
 
     # get current coin price
     ltp = rebalancer.get_ltp()
