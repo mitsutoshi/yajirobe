@@ -280,6 +280,7 @@ class GmoRebalancer(Rebalancer):
                 'executionType': 'LIMIT',
                 'price': price_s,
                 'size': str(quantity),
+                'timeInForce': 'SOK',
                 }
         headers = self.__create_auth_header('POST', path, json.dumps(params))
         res = requests.post(f"{__class__.prv_url}{path}", headers=headers, data=json.dumps(params))
