@@ -31,7 +31,7 @@ def estimate_order(coin_balance: float, base_balance: float, price: float) -> (s
     logger.info(f"Asset rate: base={(base_asset_rate):.1%}, cryptocurrency={(coin_asset_rate):.1%}, diff={asset_rate_diff:.1%}")
 
     # if difference is small(<1%), do not order to avoid cost
-    if asset_rate_diff < 0.01:
+    if asset_rate_diff < 0.005:
         return (None, None,)
 
     rate = 0.5
