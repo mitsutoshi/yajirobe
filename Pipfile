@@ -9,7 +9,6 @@ pylint = "*"
 [packages]
 requests = "*"
 pyjwt = "*"
-influxdb = "*"
 liquidpy = {git = "https://github.com/mitsutoshi/liquidpy",ref = "master"}
 python-bitbankcc = {git = "https://github.com/bitbankinc/python-bitbankcc"}
 
@@ -18,6 +17,3 @@ python_version = "3.10"
 
 [scripts]
 rebalance = "python rebalance.py"
-get_balance = "python get_metrics/get_balance.py"
-get_deposit = "python get_metrics/get_deposit.py"
-get_execution = "python get_metrics/get_execution.py"
