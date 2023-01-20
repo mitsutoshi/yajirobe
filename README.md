@@ -6,13 +6,13 @@ yajirobe is a script to rebalance cryptocurrency assets. Amount of fiat and cryp
 
 ## Supported Exchanges
 
-* Liquid by FTX
+* ~~Liquid by FTX~~
 * bitbank
 * GMO Coin
 
 ## How to run
 
-### Run on Github
+### Run on Github regularly
 
 This repository uses Github Actions to run rebalancing script regularly.
 
@@ -26,7 +26,9 @@ This repository uses Github Actions to run rebalancing script regularly.
     |API_SECRET|No|Your API secret of the exchange you want to rebalance.|
     |SLACK_WEBHOOK_URL|Yes|Slack Webhook URL. Set value if you need to send a notification about result of process.|
 
-3. Edit running schedule in [rebalance.yml](.github/workflows/rebalance.yml) if necessary. The execution schedule can be specified in cron format. Default setting is to run script every hours.
+3. Edit [rebalance.yml](.github/workflows/rebalance.yml) to setup a rebalance job.
+
+    a. Change a running schedule. The execution schedule can be specified in cron format. Default setting is to run script every hours.
 
     ```yml
     on: 
@@ -34,7 +36,24 @@ This repository uses Github Actions to run rebalancing script regularly.
           - cron: '0 */1 * * *'
     ```
 
-### Run on local machine
+3. Edit a command to run script according to your needs.
+
+    ```
+    - name: Run
+      run: pipenv run rebalance -e EXCHANGE -s SYMBOL
+    ```
+
+    `EXCHANGE` is exchange's name such as gmo, bitbank. `SYMBOL` must be specified by two coin names with slash in between such as `BTC/JPY`. Symbols can be specified depend on each exchange.
+
+    e.g.
+
+    ```
+    # Rebalancing 'BTC/JPY' on GMO Coin.
+    - name: Run
+      run: pipenv run rebalance -e gmo -s 'BTC/JPY'
+    ```
+
+### Run one-time on local machine
 
 1. Clone this repository.
 
@@ -46,6 +65,5 @@ This repository uses Github Actions to run rebalancing script regularly.
     pipenv run rebalance -e EXCHANGE -s SYMBOL
     ```
 
-    `EXCHANGE` is exchange's name. `SYMBOL` must be specified by two coin namas with slash in between such as `BTC/JPY`.
+    > If you want to regulary run scirpt on your local machine, you need to use job management system such as cron.
 
-    Symbols can be specified depend on each exchange.
