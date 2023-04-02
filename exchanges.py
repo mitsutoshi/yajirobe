@@ -123,7 +123,7 @@ class BitbankRebalancer(Rebalancer):
         self.asset2 = coins[1].lower()
         self.pair = f'{self.asset1}_{self.asset2}'
         self.pub = python_bitbankcc.public()
-        self.prv = python_bitbankcc.private(os.getenv('API_KEY'), os.getenv('API_SECRET'))
+        self.prv = python_bitbankcc.private(os.getenv('BITBANK_API_KEY'), os.getenv('BITBANK_API_SECRET'))
 
     def get_balance(self) -> dict[str, float]:
         try:
@@ -206,8 +206,8 @@ class GmoRebalancer(Rebalancer):
 
     def __init__(self, symbol: str):
         super().__init__(symbol)
-        self.api_key = os.getenv('API_KEY')
-        self.api_secret = os.getenv('API_SECRET')
+        self.api_key = os.getenv('GMO_API_KEY')
+        self.api_secret = os.getenv('GMO_API_SECRET')
         coins = symbol.split(SYMBOL_SEPARATOR)
         self.asset1 = coins[0].upper()
         self.asset2 = coins[1].upper()
