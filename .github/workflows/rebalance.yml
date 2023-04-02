@@ -6,8 +6,31 @@ on:
         - '.github/workflows/rebalance.yml'
         - 'rebalance.py'
         - 'exchanges.py'
+
 jobs:
-  rebalance:
+
+  rebalance-bitbank-xrpjpy:
+    env:
+      BITBANK_API_KEY: ${{ secrets.BITBANK_API_KEY }}
+      BITBANK_API_SECRET: ${{ secrets.BITBANK_API_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv --upgrade-strategy=only-if-needed
+          pipenv install
+      - name: Run
+        run: pipenv run rebalance -e bitbank -s 'XRP/JPY'
+
+  rebalance-gmo-btcjpy:
     env:
       GMO_API_KEY: ${{ secrets.GMO_API_KEY }}
       GMO_API_SECRET: ${{ secrets.GMO_API_SECRET }}

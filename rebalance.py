@@ -88,7 +88,7 @@ def main():
 
     # get current coin price
     ltp = rebalancer.get_ltp()
-    logger.info(f'Latest price of {args.symbol}: {ltp:.0f}')
+    logger.info(f'Latest price of {args.symbol}: {ltp:.2f}')
 
     # cancel orders
     rebalancer.cancel_all_orders()
