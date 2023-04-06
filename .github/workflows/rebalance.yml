@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
           cache: 'pipenv'
       - name: Install pipenv
-          run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
       - name: Install dependencies
         run: pipenv sync
       - name: Run
