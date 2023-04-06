@@ -62,6 +62,9 @@ class Rebalancer(metaclass=ABCMeta):
     def get_best_bid_price(self) -> float:
         pass
 
+    @abstractmethod
+    def get_price_prec(self) -> float:
+        pass
 
 class LiquidRebalancer(Rebalancer):
 
@@ -179,6 +182,9 @@ class BitbankRebalancer(Rebalancer):
     def get_best_bid_price(self) -> float:
         return  float(self.pub.get_ticker(self.pair)['buy'])
 
+    def get_price_prec(self) -> int:
+        return __class__.config[self.asset1]['order_price_prec']
+
 
 class GmoRebalancer(Rebalancer):
 
@@ -187,22 +193,6 @@ class GmoRebalancer(Rebalancer):
     prv_url: str = 'https://api.coin.z.com/private'
 
     symbols = ['BTC', 'ETH', 'XRP']
-
-    min_order_size: dict[str, float] = {
-            'BTC': 0.0001,
-            'ETH': 0.01,
-            'XRP': 1,
-            }
-
-    min_order_unit: dict[str, float] = {
-            'BTC': 0.0001,
-            'ETH': 0.0001,
-            'XRP': 1,
-            }
-
-    order_price_precision: dict[str, float] = {
-            'BTC': 0,
-            }
 
     config = {
             'BTC': {
@@ -321,6 +311,9 @@ class GmoRebalancer(Rebalancer):
         res = requests.get(f"{__class__.pub_url}/v1/ticker?symbol={self.asset1}")
         ticker = json.loads(res.text)
         return float(ticker['data'][0]['bid'])
+
+    def get_price_prec(self) -> int:
+        return __class__.config[self.asset1]['order_price_prec']
 
     def __raise_err_if_fail(self, body) -> str:
         if body['status'] != 0:

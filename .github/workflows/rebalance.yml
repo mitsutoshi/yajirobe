@@ -3,11 +3,11 @@ name: rebalance
 on:
   workflow_dispatch:
   schedule:
-      - cron: '0 */1 * * *'
+    - cron: '0 */1 * * *'
 
 jobs:
 
-  rebalance-bitbank-xrpjpy:
+  rebalance:
     env:
       BITBANK_API_KEY: ${{ secrets.BITBANK_API_KEY }}
       BITBANK_API_SECRET: ${{ secrets.BITBANK_API_SECRET }}

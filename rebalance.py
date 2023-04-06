@@ -112,10 +112,13 @@ def main():
     order_price = ltp
     bid_price = rebalancer.get_best_bid_price()
     ask_price = rebalancer.get_best_ask_price()
+
+    # 1 bps to plus/minus order price
+    a = 1 / (10 ** rebalancer.get_price_prec())
     if side == 'buy' and order_price > bid_price:
-        order_price = bid_price + 1
+        order_price = bid_price + a
     elif side == 'sell' and order_price < ask_price:
-        order_price = ask_price - 1
+        order_price = ask_price - a
 
     logger.info(f"Order will be created. [symbol='{args.symbol}', side={side}, price={order_price}, qty={qty:.8f}]")
     try:
@@ -127,7 +130,7 @@ def main():
         raise e
 
     # create and send notification
-    total = int(bal[rebalancer.trade_coin] * order_price + bal[rebalancer.base_coin])
+    total = int(bal[rebalancer.trade_coin] * ltp + bal[rebalancer.base_coin])
     base_coin_rate = bal[rebalancer.base_coin] / total
     text = f'''{t}
 ```
