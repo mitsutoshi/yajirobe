@@ -116,6 +116,24 @@ class LiquidRebalancer(Rebalancer):
 
 class BitbankRebalancer(Rebalancer):
 
+    config = {
+            'BTC': {
+                'min_order_size': 0.0001,
+                'min_order_unit': 0.0001,
+                'order_price_prec': 0,
+                },
+            'ETH': {
+                'min_order_size': 0.0001,
+                'min_order_unit': 0.0001,
+                'order_price_prec': 0,
+                },
+            'XRP': {
+                'min_order_size': 0.0001,
+                'min_order_unit': 0.0001,
+                'order_price_prec': 3,
+                },
+            }
+
     def __init__(self, symbol: str):
         super().__init__(symbol)
         coins = symbol.split(SYMBOL_SEPARATOR)
@@ -147,19 +165,19 @@ class BitbankRebalancer(Rebalancer):
         return float(self.pub.get_ticker(self.pair)['last'])
 
     def get_min_order_size(self) -> float:
-        return 0.0001
+        return __class__.config[self.asset1]['min_order_size']
 
     def create_order(self, side: str, quantity: float, price: float) -> str:
         return self.prv.order(self.pair, price, quantity, side, 'limit', True)['order_id']
 
     def get_min_order_unit(self) -> float:
-        raise NotImplementedError
+        return __class__.config[self.asset1]['min_order_unit']
 
     def get_best_ask_price(self) -> float:
-        raise NotImplementedError
+        return  self.pub.get_ticker(self.pair)['sell']
 
     def get_best_bid_price(self) -> float:
-        raise NotImplementedError
+        return  self.pub.get_ticker(self.pair)['buy']
 
 
 class GmoRebalancer(Rebalancer):
