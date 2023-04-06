@@ -117,17 +117,17 @@ class LiquidRebalancer(Rebalancer):
 class BitbankRebalancer(Rebalancer):
 
     config = {
-            'BTC': {
+            'btc': {
                 'min_order_size': 0.0001,
                 'min_order_unit': 0.0001,
                 'order_price_prec': 0,
                 },
-            'ETH': {
+            'eth': {
                 'min_order_size': 0.0001,
                 'min_order_unit': 0.0001,
                 'order_price_prec': 0,
                 },
-            'XRP': {
+            'xrp': {
                 'min_order_size': 0.0001,
                 'min_order_unit': 0.0001,
                 'order_price_prec': 3,
@@ -174,10 +174,10 @@ class BitbankRebalancer(Rebalancer):
         return __class__.config[self.asset1]['min_order_unit']
 
     def get_best_ask_price(self) -> float:
-        return  self.pub.get_ticker(self.pair)['sell']
+        return  float(self.pub.get_ticker(self.pair)['sell'])
 
     def get_best_bid_price(self) -> float:
-        return  self.pub.get_ticker(self.pair)['buy']
+        return  float(self.pub.get_ticker(self.pair)['buy'])
 
 
 class GmoRebalancer(Rebalancer):
