@@ -192,8 +192,6 @@ class GmoRebalancer(Rebalancer):
 
     prv_url: str = 'https://api.coin.z.com/private'
 
-    symbols = ['BTC', 'ETH', 'XRP']
-
     config = {
             'BTC': {
                 'min_order_size': 0.0001,
@@ -219,7 +217,7 @@ class GmoRebalancer(Rebalancer):
         coins = symbol.split(SYMBOL_SEPARATOR)
         self.asset1 = coins[0].upper()
         self.asset2 = coins[1].upper()
-        if self.asset1 not in __class__.symbols:
+        if self.asset1 not in __class__.config.keys():
             raise ValueError(f"Asset is not supported. [{self.asset1}]")
 
     def __create_auth_header(self, method: str, path: str, data: str = '') -> dict:
