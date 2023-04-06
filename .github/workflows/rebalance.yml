@@ -1,3 +1,5 @@
+name: rebalance
+
 on:
   workflow_dispatch:
   schedule:
